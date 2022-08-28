@@ -110,7 +110,7 @@ int	start_menu(t_game *game)
 			break ;
 	}
 	wattroff(game->win, A_BOLD);
-	return (ret);
+	return (2 - ret);
 }
 
 void	init_grid(t_game *game, int mode)
@@ -124,7 +124,7 @@ void	init_grid(t_game *game, int mode)
 		i = -1;
 		while (++i < WIN_LEN)
 		{
-			if (j == game->player.y && i == game->player.x)
+			if (mode && j == game->player.y && i == game->player.x)
 				game->grid[j][i] = 'A';
 			else if (mode == 2 && j == game->second_player.y && i == game->second_player.x)
 				game->grid[j][i] = 'S';	
@@ -180,37 +180,26 @@ int	main (void)
 		fprintf(stderr,"\x1b[91mTerminal is too small! Please increase the size of your terminal.\n\x1b[0m");
 		return (0);
 	}
-	//Now the player starts at the bottom center of the rectangle
-	game.player.y = WIN_HEI - 2;
-	game.player.x = WIN_LEN / 2 - 1;
-	//The second player starts at the upper center of the rectangle
-	game.second_player.y = 2;
-	game.second_player.x = WIN_LEN / 2 - 1;
 	create_scenery(&game);
 	update_scenery(&game);
 	//Do we have to keep the lines below ?
 	/*wattron(game.win, COLOR_PAIR(5));
 	mvwprintw(game.win, game.player.y, game.player.x, "A");
 	wattroff(game.win, COLOR_PAIR(5));
-	wattrset(game.win, COLOR_PAIR(1));
-	
+	wattrset(game.win, COLOR_PAIR(1));*/
+	game.cols = COLS;
+	game.lines = LINES;
 	wattrset(stdscr, COLOR_PAIR(5));
 	int test = -1;
 	while (++test < COLS * LINES)
 		printw(" ");
+	init_grid(&game, 0);
+	display_grid(&game);
+	wrefresh(stdscr);
 	wrefresh(game.win);
-	wrefresh(stdscr);*/
 	//Adding a start menu
-	if (start_menu(&game))
-	{
-		init_grid(&game, 1);
-		game_loop1(&game);
-	}
-	else
-	{
-		init_grid(&game, 2);
-		game_loop2(&game);
-	}
+	game.player_nbr = start_menu(&game);
+	game_loop(&game);
 	endwin();
 	return (0);
 }
