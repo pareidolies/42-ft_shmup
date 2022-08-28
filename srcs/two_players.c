@@ -6,7 +6,7 @@
 /*   By: ppajot <ppajot@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/26 19:13:16 by ppajot            #+#    #+#             */
-/*   Updated: 2022/08/28 16:51:18 by ppajot           ###   ########.fr       */
+/*   Updated: 2022/08/28 20:08:17 by ppajot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,21 +28,41 @@ void	send_enemies(t_game *game)
 	int	i;
 
 	i = rand() % 100;
-	if (i < 20)
+	if (i < 25)
 		game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'U';
-	else if (i < 30)
+	else if (i < 37)
 		game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'V';
-	else if (i < 40)
-		game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'W';
 	else if (i < 50)
-		game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'X';
-	//else if (i < 60)
-		//game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'Y';
+		game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'W';
+	else if (i < 75)
+	{
+		if (game->player_nbr == 2)
+		{
+			if (rand() % 2)
+				game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'X';
+			else
+				game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'Y';
+		}
+		else
+			game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'X';
+	}
+	else
+	{
+		if (game->player_nbr == 2)
+		{
+			if (rand() % 2)
+				game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'Z';
+			else
+				game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'z';
+		}
+		else
+			game->grid[rand() % WIN_HEI][WIN_LEN - 1] = 'Z';
+	}
 }
 
 int	is_enemy(unsigned int id)
 {
-	if (id == 'U' || id == 'V' || id == 'W' || id == 'X' || id == 'Z' || id == ACS_DIAMOND)
+	if (id == 'U' || id == 'V' || id == 'W' || id == 'X' || id == 'Y' || id == 'Z' || id == 'z' || id == 'a' || id == 's' || id == ACS_DIAMOND)
 		return (1);
 	return (0);
 }
@@ -57,6 +77,13 @@ int	is_player(unsigned int id)
 int	is_player_bullet(unsigned int id)
 {
 	if (id == ACS_BULLET || id == '-')
+		return (1);
+	return (0);
+}
+
+int	is_enemy_bullet(unsigned int id)
+{
+	if (id == ACS_DIAMOND || id == 'a' || id == 's')
 		return (1);
 	return (0);
 }
@@ -91,7 +118,12 @@ unsigned int	collision(t_game *game, unsigned int moving, unsigned int obst)
 		return (' ');
 	}
 	if (is_enemy(moving) && is_enemy(obst))
-		return (' ');
+	{
+		if (is_enemy_bullet(moving))
+			return (obst);
+		else
+			return (moving);
+	}
 	if ((is_player(moving) && is_player_bullet(obst)) || (is_player(obst) && is_player_bullet(moving)))
 	{
 		if (moving == 'A' || obst == 'A')
@@ -173,7 +205,7 @@ void	update_enemy_pos(t_game *game)
 		i = -1;
 		while (++i < WIN_LEN)
 		{
-			if (j >= game->player.y && game->frame_time % 2 == 0 && game->grid[j][i] == 'X')
+			if (j >= game->player.y && game->grid[j][i] == 'X')
 			{
 				if (i > 0)
 				{
@@ -184,13 +216,24 @@ void	update_enemy_pos(t_game *game)
 				}
 				game->grid[j][i] = ' ';
 			}
-			if (game->frame_time % 2 == 0 && game->grid[j][i] == 'U')
+			if (j >= game->second_player.y && game->grid[j][i] == 'Y')
 			{
 				if (i > 0)
-					game->grid[j][i - 1] = collision(game, 'U', game->grid[j][i - 1]);
+				{
+					if (j > game->second_player.y)
+						game->grid[j - 1][i - 1] = collision(game, 'Y', game->grid[j - 1][i - 1]);
+					else
+						game->grid[j][i - 1] = collision(game, 'Y', game->grid[j][i - 1]);
+				}
 				game->grid[j][i] = ' ';
 			}
-			if (game->frame_time % 3 == 0 &&game->grid[j][i] == 'V')
+			if (game->grid[j][i] == 'U' || game->grid[j][i] == 'Z' || game->grid[j][i] == 'z')
+			{
+				if (i > 0)
+					game->grid[j][i - 1] = collision(game, game->grid[j][i], game->grid[j][i - 1]);
+				game->grid[j][i] = ' ';
+			}
+			if (game->grid[j][i] == 'V')
 			{
 				if (i > 0 && j)
 					game->grid[j - 1][i - 1] = collision(game, 'V', game->grid[j - 1][i - 1]);
@@ -207,13 +250,19 @@ void	update_enemy_pos(t_game *game)
 		i = -1;
 		while (++i < WIN_LEN)
 		{
-			if (j < game->player.y && game->frame_time % 2 == 0 && game->grid[j][i] == 'X')
+			if (j < game->player.y && game->grid[j][i] == 'X')
 			{
 				if (i > 0)
 					game->grid[j + 1][i - 1] = collision(game, 'X', game->grid[j + 1][i - 1]);
 				game->grid[j][i] = ' ';
 			}
-			if (game->frame_time % 3 == 0 && game->grid[j][i] == 'W')
+			if (j < game->second_player.y && game->grid[j][i] == 'Y')
+			{
+				if (i > 0)
+					game->grid[j + 1][i - 1] = collision(game, 'Y', game->grid[j + 1][i - 1]);
+				game->grid[j][i] = ' ';
+			}
+			if (game->grid[j][i] == 'W')
 			{
 				if (i > 0 && j < WIN_HEI - 1)
 					game->grid[j + 1][i - 1] = collision(game, 'W', game->grid[j + 1][i - 1]);
@@ -257,15 +306,57 @@ void	update_enemy_bullet(t_game *game)
 		i = -1;
 		while (++i < WIN_LEN)
 		{
-			if (game->grid[j][i] >= 'U' && game->grid[j][i] <= 'X' && i % 20 == 0 && (((game->grid[j][i] == 'V' || game->grid[j][i] == 'W') && game->frame_time % 3 == 0) || (game->grid[j][i] != 'V' && game->grid[j][i] != 'W' && game->frame_time % 2 == 0)))
+			if (game->grid[j][i] >= 'U' && game->grid[j][i] <= 'Y' && i % (20 - game->level) == 0/* && game->frame_time % (5 - game->level / 3) == 0*/)
 			{
 				if (i > 0)
 					game->grid[j][i - 1] = collision(game, ACS_DIAMOND, game->grid[j][i - 1]);
+			}
+			if (game->grid[j][i] == 'Z' && i % (20 - game->level) == 0)
+			{
+				if (i > 0)
+					game->grid[j][i - 1] = collision(game, 'a', game->grid[j][i - 1]);
+			}
+			if (game->grid[j][i] == 'z' && i % (20 - game->level) == 0)
+			{
+				if (i > 0)
+					game->grid[j][i - 1] = collision(game, 's', game->grid[j][i - 1]);
 			}
 			if (game->grid[j][i] == ACS_DIAMOND)
 			{
 				if (i > 0)
 					game->grid[j][i - 1] = collision(game, ACS_DIAMOND, game->grid[j][i - 1]);
+				game->grid[j][i] = ' ';
+			}
+			if (game->grid[j][i] == 'a' && j >= game->player.y)
+			{
+				if (i > 0)
+					game->grid[j - 1][i - 1] = collision(game, 'a', game->grid[j - 1][i - 1]);
+				game->grid[j][i] = ' ';
+			}
+			if (game->grid[j][i] == 's' && j >= game->second_player.y)
+			{
+				if (i > 0)
+					game->grid[j - 1][i - 1] = collision(game, 's', game->grid[j - 1][i - 1]);
+				game->grid[j][i] = ' ';
+			}
+		}
+	}
+	j = WIN_HEI;
+	while (--j >= 0)
+	{
+		i = -1;
+		while (++i < WIN_LEN)
+		{
+			if (game->grid[j][i] == 'a' && j < game->player.y)
+			{
+				if (i > 0)
+					game->grid[j + 1][i - 1] = collision(game, 'a', game->grid[j - 1][i - 1]);
+				game->grid[j][i] = ' ';
+			}
+			if (game->grid[j][i] == 's' && j < game->second_player.y)
+			{
+				if (i > 0)
+					game->grid[j + 1][i - 1] = collision(game, 's', game->grid[j + 1][i - 1]);
 				game->grid[j][i] = ' ';
 			}
 		}
@@ -277,22 +368,15 @@ void	update_grid(t_game *game, int ch, int boss)
 	if (game->player.lives)
 		update_player_pos(game, ch, boss);
 	if (game->second_player.lives)
-		update_second_player_pos(game, ch, boss);
-	update_enemy_pos(game);
+		update_second_player_pos(game, ch);
+	if (game->frame_time % (5 - game->level / 3) == 0)
+		update_enemy_pos(game);
 	update_player_bullet(game);
 	update_enemy_bullet(game);
-	if (boss)
-		return;
-	if (game->player.lives && ch == 32 && game->player.last_bullet >= game->player.bullet_delay && game->player.x < WIN_LEN - 1)
-	{
+	if (game->player.lives && game->frame_time % game->player.bullet_delay == 1 && game->player.x < WIN_LEN - 1)
 		game->grid[game->player.y][game->player.x + 1] = collision(game, ACS_BULLET, game->grid[game->player.y][game->player.x + 1]);
-		game->player.last_bullet = 0;
-	}
-	if (game->second_player.lives && ch == SECOND_PLAYER_KEY_X && game->second_player.last_bullet >= game->second_player.bullet_delay && game->second_player.x < WIN_LEN - 1)
-	{
+	if (game->second_player.lives && game->frame_time % game->second_player.bullet_delay == 1 && game->second_player.x < WIN_LEN - 1)
 		game->grid[game->second_player.y][game->second_player.x + 1] = collision(game, '-', game->grid[game->second_player.y][game->second_player.x + 1]);
-		game->second_player.last_bullet = 0;
-	}
 }
 
 void	display_good(t_game *game, unsigned int c, int j, int i)
@@ -308,9 +392,9 @@ void	display_good(t_game *game, unsigned int c, int j, int i)
 	//Bullet of the second player
 	else if (c == '-')
 		c = '-';
-	else if (c >= 'U' && c <= 'X')
+	else if (is_enemy(c) && !is_enemy_bullet(c))
 		c = ACS_DIAMOND;
-	else if (c == ACS_DIAMOND)
+	else if (is_enemy_bullet(c))
 		c = ACS_BULLET;
 	if (c == '>' || c == '~')
 	{
@@ -322,7 +406,10 @@ void	display_good(t_game *game, unsigned int c, int j, int i)
 	else if (c == 'D' || c == '-')
 	{
 		wattron(game->win, COLOR_PAIR(10));
-		mvwaddch(game->win, j, i, c);
+		if (c == '-')
+			mvwaddch(game->win, j, i, c);
+		else
+			mvwaddch(game->win, j, i, '>');
 		wattroff(game->win, COLOR_PAIR(10));
 	}
 	else
@@ -419,15 +506,46 @@ int	end_menu(t_game *game, int won)
 	return (ret);
 }
 
+void	draw_box(void)
+{
+	int	i;
+
+	i = -1;
+	mvaddch(0, 0, ACS_ULCORNER);
+	mvaddch(0, WIN_LEN + 1, ACS_URCORNER);
+	mvaddch(WIN_HEI + 3, 0, ACS_LLCORNER);
+	mvaddch(WIN_HEI + 3, WIN_LEN + 1, ACS_LRCORNER);
+	while (++i < WIN_LEN && i < COLS)
+	{
+		mvaddch(0, i + 1, ACS_HLINE);
+		mvaddch(2, i + 1, ACS_HLINE);
+		mvaddch(WIN_HEI + 3, i + 1, ACS_HLINE);
+	}
+	i = -1;
+	while (++i < WIN_HEI + 2 && i < LINES)
+	{
+		mvaddch(i + 1, 0, ACS_VLINE);
+		mvaddch(i + 1, WIN_LEN + 1, ACS_VLINE);
+	}
+	mvaddch(2, 0, ACS_LTEE);
+	mvaddch(2, WIN_LEN + 1, ACS_RTEE);
+}
+
 void	display_score(t_game *game)
 {
+	int		i;
+	char	score[WIN_LEN + 2];
+	
+	i = -1;
 	attron(A_BOLD);
 	if (game->player_nbr == 1)
-		mvprintw(game->lines / 2 - WIN_HEI / 2 - 1, game->cols / 2 - WIN_LEN / 2,  "LIVES : %-60i SCORE : %-58i TIME : %7.2f", game->player.lives, game->score, (float)game->frame_time * 0.03);
+		sprintf(score, "LIVES : %-60i SCORE : %-58i TIME : %7.2f", game->player.lives, game->score, (float)game->frame_time * 0.03);
 	else
-		mvprintw(game->lines / 2 - WIN_HEI / 2 - 1, game->cols / 2 - WIN_LEN / 2,  "P1 LIVES : %-5i P2 LIVES : %-41i SCORE : %-58i TIME : %7.2f", game->player.lives, game->second_player.lives, game->score, (float)game->frame_time * 0.03);
+		sprintf(score, "P1 LIVES : %-5i P2 LIVES : %-41i SCORE : %-58i TIME : %7.2f", game->player.lives, game->second_player.lives, game->score, (float)game->frame_time * 0.03);
+	while (++i < WIN_LEN)
+		if (score[i])
+			mvaddch(1, i + 1, score[i]);
 	attroff(A_BOLD);
-	refresh();
 }
 
 void	game_loop(t_game *game)
@@ -450,12 +568,11 @@ void	game_loop(t_game *game)
 	//The second player starts at the upper center of the rectangle
 	
 	game->frame_time = 0;
-	game->player.bullet_delay = 5;
-	game->player.last_bullet = 5;
-	game->second_player.bullet_delay = 5;
-	game->second_player.last_bullet = 5;
+	game->player.bullet_delay = 20;
+	game->second_player.bullet_delay = 20;
 	game->score = 0;
 	game->player.lives = 5;
+	game->level = 0;
 	if (game->player_nbr == 2)
 	{
 		game->second_player.y = 2;
@@ -473,11 +590,9 @@ void	game_loop(t_game *game)
 	while (game->player.lives || game->second_player.lives)
 	{
 		game->frame_time++;
-		if (game->player.last_bullet < game->player.bullet_delay)
-			game->player.last_bullet++;
-		if (game->second_player.last_bullet < game->second_player.bullet_delay)
-			game->second_player.last_bullet++;
-		if (game->frame_time % 30 == 0 && game->frame_time < 100)
+		if (game->frame_time % 330 == 0 && game->level < 11)
+			game->level++;
+		if (game->frame_time % (30 - game->level * 2) == 0)
 			send_enemies(game);
 		if (game->frame_time % 30 == 0 && game->frame_time > 100 && game->frame_time < 400) //waiting for all bullets and enemies to leave frame, and then boss may arrive... 
 			boss = 1;
@@ -493,14 +608,12 @@ void	game_loop(t_game *game)
 			return ;
 		if (ch == 410)
 		{
-			int test = -1;
-			while (++test < COLS * LINES)
-			printw(" ");
-		}	
-		update_grid(game, ch, boss);
+			draw_box();
+			refresh();
+		}
+		update_grid(game, ch);
 		display_grid(game);
 		wrefresh(game->win);
-		//wrefresh(stdscr);
 		display_score(game);
 		frame_end = get_time_ms();
 		while (frame_end - frame_start < 30)

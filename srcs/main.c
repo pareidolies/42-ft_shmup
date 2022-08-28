@@ -20,7 +20,7 @@ int right_size(WINDOW *win)
 
 	getmaxyx(win, term_y, term_x);
 
-	return ((term_x >= WIN_LEN)&&(term_y >= WIN_HEI));
+	return ((term_x >= WIN_LEN) && (term_y >= WIN_HEI + 2));
 }
 
 /*
@@ -143,8 +143,8 @@ int	main (void)
 	initscr();
 	raw();
 	keypad(stdscr, TRUE);
-	winy = (LINES - WIN_HEI) / 2;
-	winx = (COLS - WIN_LEN) / 2;
+	winy = 3;
+	winx = 1;
 
 	start_color();
 	curs_set(0);
@@ -165,6 +165,7 @@ int	main (void)
 	init_color(COLOR_YELLOW, 0, 0, 800);
 	init_color(COLOR_GREY, 100, 100, 100);
 	init_color(COLOR_CYAN, 800, 800, 100);
+	attrset(COLOR_PAIR(9));
 	//Rand initialization
 	srand(time(NULL));
 
@@ -189,14 +190,12 @@ int	main (void)
 	wattrset(game.win, COLOR_PAIR(1));*/
 	game.cols = COLS;
 	game.lines = LINES;
-	wattrset(stdscr, COLOR_PAIR(5));
-	int test = -1;
-	while (++test < COLS * LINES)
-		printw(" ");
+	draw_box();
 	init_grid(&game, 0);
 	display_grid(&game);
 	wrefresh(stdscr);
 	wrefresh(game.win);
+	
 	//Adding a start menu
 	game.player_nbr = start_menu(&game);
 	game_loop(&game);
