@@ -6,7 +6,7 @@
 /*   By: ppajot <ppajot@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/26 19:09:28 by ppajot            #+#    #+#             */
-/*   Updated: 2022/08/28 19:53:22 by ppajot           ###   ########.fr       */
+/*   Updated: 2022/08/28 21:23:54 by ppajot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,13 +74,6 @@
 # define L39 "  .       *                        . .           .                     .  .                                     .  + . ..                         .                        .                      ;              "
 
 
-typedef	struct s_enemy
-{
-	int		x;
-	int		y;
-	char	type;
-}		t_enemy;
-
 typedef struct s_player
 {
 	int	x;
@@ -103,16 +96,18 @@ typedef struct	s_game
 	int				cols;
 	int				score;
 	int				level;
+	int				boss;
+	int				boss_pos;
+	int				boss_life;
 }		t_game;
 
 void	game_loop(t_game *game);
 void	update_scenery(t_game *game);
 void    create_scenery(t_game *game);
 void	init_grid(t_game *game, int mode);
-void	update_grid(t_game *game, int ch, int boss);
+void	update_grid(t_game *game, int ch);
 void	display_grid(t_game *game);
-void	boss_script(t_game *game);
-int	move_boss(t_game *game);
+int		move_boss(t_game *game);
 void	create_boss(t_game *game);
 void	draw_box(void);
 

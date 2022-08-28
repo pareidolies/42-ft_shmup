@@ -6,7 +6,7 @@
 /*   By: ppajot <ppajot@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/26 19:13:16 by ppajot            #+#    #+#             */
-/*   Updated: 2022/08/28 20:08:17 by ppajot           ###   ########.fr       */
+/*   Updated: 2022/08/28 21:39:35 by ppajot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,13 @@ int	is_enemy_bullet(unsigned int id)
 	return (0);
 }
 
+int	is_boss(unsigned int id)
+{
+	if (id == '/' || id == '\\' || id == '_' || id == '#'|| id == '\'')
+		return (1);
+	return (0);
+}
+
 unsigned int	collision(t_game *game, unsigned int moving, unsigned int obst)
 {
 	//The second player can be killed by enemies
@@ -117,6 +124,34 @@ unsigned int	collision(t_game *game, unsigned int moving, unsigned int obst)
 		game->score++;
 		return (' ');
 	}
+	if ((is_boss(moving) && is_enemy(obst)) || (is_boss(obst) && is_enemy(moving)))
+	{
+		if (is_enemy(moving))
+			return (obst);
+		else
+			return (moving);
+	}
+	if ((is_boss(moving) && is_player(obst)) || (is_boss(obst) && is_player(moving)))
+	{
+		if (moving == 'A' || obst == 'A')
+			game->player.lives = 0;
+		else
+			game->second_player.lives = 0;
+		if (is_boss(moving))
+			return (moving);
+		else
+			return (obst);
+	}
+	if ((is_boss(moving) && is_player_bullet(obst)) || (is_boss(obst) && is_player_bullet(moving)))
+	{
+		game->boss_life--;
+		if (game->boss_life == 0)
+			game->score += 50;
+		if (is_player_bullet(moving))
+			return (obst);
+		else
+			return (moving);
+	}
 	if (is_enemy(moving) && is_enemy(obst))
 	{
 		if (is_enemy_bullet(moving))
@@ -134,10 +169,8 @@ unsigned int	collision(t_game *game, unsigned int moving, unsigned int obst)
 	return (moving);
 }
 
-void	update_player_pos(t_game *game, int ch, int boss)
+void	update_player_pos(t_game *game, int ch)
 {
-	if (boss)
-		return;
 	if (ch == KEY_UP && game->player.y > 0 && !(game->player.y - 1 == game->second_player.y && game->player.x == game->second_player.x))
 	{
 		game->grid[game->player.y][game->player.x] = ' ';
@@ -164,10 +197,8 @@ void	update_player_pos(t_game *game, int ch, int boss)
 	}
 }
 
-void	update_second_player_pos(t_game *game, int ch, int boss)
+void	update_second_player_pos(t_game *game, int ch)
 {
-	if (boss)
-		return;
 	if (ch == SECOND_KEY_UP && game->second_player.y > 0 && !(game->player.y == game->second_player.y - 1 && game->player.x == game->second_player.x))
 	{
 		game->grid[game->second_player.y][game->second_player.x] = ' ';
@@ -241,7 +272,6 @@ void	update_enemy_pos(t_game *game)
 					game->grid[j + 1][i - 1] = collision(game, 'W', game->grid[j + 1][i - 1]);
 				game->grid[j][i] = ' ';
 			}
-			
 		}
 	}
 	j = WIN_HEI;
@@ -363,16 +393,75 @@ void	update_enemy_bullet(t_game *game)
 	}
 }
 
-void	update_grid(t_game *game, int ch, int boss)
+void	update_boss(t_game *game)
 {
-	if (game->player.lives)
-		update_player_pos(game, ch, boss);
-	if (game->second_player.lives)
+	int			i;
+	int			j;
+	
+	static int	direction = -1;
+	
+	if (game->boss_pos > 35)
+		direction = -1;
+	if (game->boss_pos < 5)
+		direction = 1;
+	if (direction == 1)
+		j = WIN_HEI - 1;
+	else
+		j = 0;
+	while (j < WIN_HEI && j >= 0)
+	{
+		i = -1;
+		while (++i < WIN_LEN)
+		{
+			if (is_boss(game->grid[j][i]))
+			{
+				game->grid[j + direction][i] = collision(game, game->grid[j][i], game->grid[j + direction][i]);
+				game->grid[j][i] = ' ';
+			}
+		}
+		j = j - direction;
+	}
+	game->boss_pos += direction;
+}
+
+void	boss_shoots(t_game *game)
+{
+	if (game->frame_time % 20 == 0)
+	{
+		game->grid[game->boss_pos][134] = collision(game, ACS_DIAMOND, game->grid[game->boss_pos][124]);
+		game->grid[game->boss_pos - 2][134] = collision(game, ACS_DIAMOND, game->grid[game->boss_pos - 2][124]);
+		game->grid[game->boss_pos + 2][134] = collision(game, ACS_DIAMOND, game->grid[game->boss_pos + 2][124]);
+	}
+	else if (game->boss_pos % 10 == 0 && game->frame_time % 5 == 0)
+	{
+		if (game->player_nbr == 2)
+		{
+			if (rand() % 2)
+				game->grid[game->boss_pos][134] = collision(game, 'a', game->grid[game->boss_pos][124]);
+			else
+				game->grid[game->boss_pos][134] = collision(game, 's', game->grid[game->boss_pos][124]);
+		}
+		else
+			game->grid[game->boss_pos][134] = collision(game, 'a', game->grid[game->boss_pos][124]);
+	}		
+}
+
+void	update_grid(t_game *game, int ch)
+{
+	if (!game->boss && game->player.lives)
+		update_player_pos(game, ch);
+	if (!game->boss && game->second_player.lives)
 		update_second_player_pos(game, ch);
+	if (!game->boss && game->frame_time % 30 == 0)
+		update_boss(game);
 	if (game->frame_time % (5 - game->level / 3) == 0)
 		update_enemy_pos(game);
+	if (game->level >= 10)
+		boss_shoots(game);
 	update_player_bullet(game);
 	update_enemy_bullet(game);
+	if (game->boss)
+		return ;
 	if (game->player.lives && game->frame_time % game->player.bullet_delay == 1 && game->player.x < WIN_LEN - 1)
 		game->grid[game->player.y][game->player.x + 1] = collision(game, ACS_BULLET, game->grid[game->player.y][game->player.x + 1]);
 	if (game->second_player.lives && game->frame_time % game->second_player.bullet_delay == 1 && game->second_player.x < WIN_LEN - 1)
@@ -555,7 +644,6 @@ void	game_loop(t_game *game)
 	int	x;
 	long	frame_start;
 	long	frame_end;
-	int boss = 0;
 	
 	y = WIN_HEI - 2;
 	x = WIN_LEN / 2 - 1;
@@ -566,13 +654,15 @@ void	game_loop(t_game *game)
 	game->player.y = WIN_HEI - 2;
 	game->player.x = WIN_LEN / 2 - 1;
 	//The second player starts at the upper center of the rectangle
-	
+	game->boss = 0;
 	game->frame_time = 0;
 	game->player.bullet_delay = 20;
 	game->second_player.bullet_delay = 20;
 	game->score = 0;
 	game->player.lives = 5;
 	game->level = 0;
+	game->boss_pos = 23;
+	game->boss_life = 20;
 	if (game->player_nbr == 2)
 	{
 		game->second_player.y = 2;
@@ -590,16 +680,14 @@ void	game_loop(t_game *game)
 	while (game->player.lives || game->second_player.lives)
 	{
 		game->frame_time++;
-		if (game->frame_time % 330 == 0 && game->level < 11)
+		if (game->frame_time % 330 == 0 && game->level < 10)
 			game->level++;
-		if (game->frame_time % (30 - game->level * 2) == 0)
+		if (game->frame_time % (30 - game->level * 2) == 0 && game->level != 10)
 			send_enemies(game);
-		if (game->frame_time % 30 == 0 && game->frame_time > 100 && game->frame_time < 400) //waiting for all bullets and enemies to leave frame, and then boss may arrive... 
-			boss = 1;
-		if (game->frame_time % 30 == 0 && game->frame_time > 400)
-			boss = move_boss(game);
-		if (!boss && game->frame_time % 30 == 0 && game->frame_time > 400)
-			boss_script(game);
+		if (game->frame_time > 3150 && game->frame_time < 3300) //waiting for all bullets and enemies to leave frame, and then boss may arrive... 
+			game->boss = 1;
+		if (game->frame_time % 10 == 0 && game->frame_time > 3300)
+			game->boss = move_boss(game);
 		if (game->frame_time % SCENERY_TIME == 0)
 			update_scenery(game);
 		frame_start = get_time_ms();
@@ -610,6 +698,11 @@ void	game_loop(t_game *game)
 		{
 			draw_box();
 			refresh();
+		}
+		if (ch == 98)
+		{
+			game->frame_time = 3300;
+			game->level = 10; 
 		}
 		update_grid(game, ch);
 		display_grid(game);

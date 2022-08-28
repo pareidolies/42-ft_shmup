@@ -1,11 +1,5 @@
 #include "../ft_shmup.h"
 
-void	boss_script(t_game *game)
-{
-    (void) game;
-
-}
-
 int	move_boss(t_game *game)
 {
 	int	i = 0;
