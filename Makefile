@@ -7,7 +7,7 @@ LINK := -lncurses
 SRCDIR := srcs
 OBJDIR := objs
 
-SRCS_ := main.c two_players.c scenery.c
+SRCS_ := main.c two_players.c scenery.c boss.c
 
 SRCS := $(patsubst %,$(SRCDIR)/%,$(SRCS_))
 

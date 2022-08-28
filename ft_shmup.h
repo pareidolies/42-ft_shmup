@@ -18,6 +18,7 @@
 # include <sys/time.h>
 # include <time.h>
 # include <string.h>
+# include <unistd.h>
 
 # define WIN_HEI 40
 # define WIN_LEN 150
@@ -92,7 +93,7 @@ typedef struct s_player
 typedef struct	s_game
 {
 	WINDOW			*win;
-	unsigned int	grid[WIN_HEI][WIN_LEN];
+	unsigned int	grid[WIN_HEI][WIN_LEN + 30];
 	char	scenery[WIN_HEI][WIN_LEN];
 	char	*whole_scenery[40];
 	t_player		player;
@@ -108,7 +109,10 @@ void	game_loop(t_game *game);
 void	update_scenery(t_game *game);
 void    create_scenery(t_game *game);
 void	init_grid(t_game *game, int mode);
+void	update_grid(t_game *game, int ch, int boss);
 void	display_grid(t_game *game);
-
+void	boss_script(t_game *game);
+int	move_boss(t_game *game);
+void	create_boss(t_game *game);
 
 #endif

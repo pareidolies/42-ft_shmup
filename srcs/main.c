@@ -122,7 +122,7 @@ void	init_grid(t_game *game, int mode)
 	while (++j < WIN_HEI)
 	{
 		i = -1;
-		while (++i < WIN_LEN)
+		while (++i < WIN_LEN + 30)
 		{
 			if (mode && j == game->player.y && i == game->player.x)
 				game->grid[j][i] = 'A';

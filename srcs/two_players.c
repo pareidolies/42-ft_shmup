@@ -102,8 +102,10 @@ unsigned int	collision(t_game *game, unsigned int moving, unsigned int obst)
 	return (moving);
 }
 
-void	update_player_pos(t_game *game, int ch)
+void	update_player_pos(t_game *game, int ch, int boss)
 {
+	if (boss)
+		return;
 	if (ch == KEY_UP && game->player.y > 0 && !(game->player.y - 1 == game->second_player.y && game->player.x == game->second_player.x))
 	{
 		game->grid[game->player.y][game->player.x] = ' ';
@@ -130,8 +132,10 @@ void	update_player_pos(t_game *game, int ch)
 	}
 }
 
-void	update_second_player_pos(t_game *game, int ch)
+void	update_second_player_pos(t_game *game, int ch, int boss)
 {
+	if (boss)
+		return;
 	if (ch == SECOND_KEY_UP && game->second_player.y > 0 && !(game->player.y == game->second_player.y - 1 && game->player.x == game->second_player.x))
 	{
 		game->grid[game->second_player.y][game->second_player.x] = ' ';
@@ -268,15 +272,17 @@ void	update_enemy_bullet(t_game *game)
 	}
 }
 
-void	update_grid(t_game *game, int ch)
+void	update_grid(t_game *game, int ch, int boss)
 {
 	if (game->player.lives)
-		update_player_pos(game, ch);
+		update_player_pos(game, ch, boss);
 	if (game->second_player.lives)
-		update_second_player_pos(game, ch);
+		update_second_player_pos(game, ch, boss);
 	update_enemy_pos(game);
 	update_player_bullet(game);
 	update_enemy_bullet(game);
+	if (boss)
+		return;
 	if (game->player.lives && ch == 32 && game->player.last_bullet >= game->player.bullet_delay && game->player.x < WIN_LEN - 1)
 	{
 		game->grid[game->player.y][game->player.x + 1] = collision(game, ACS_BULLET, game->grid[game->player.y][game->player.x + 1]);
@@ -431,6 +437,7 @@ void	game_loop(t_game *game)
 	int	x;
 	long	frame_start;
 	long	frame_end;
+	int boss = 0;
 	
 	y = WIN_HEI - 2;
 	x = WIN_LEN / 2 - 1;
@@ -462,6 +469,7 @@ void	game_loop(t_game *game)
 		game->second_player.x = 100000;
 	}
 	init_grid(game, game->player_nbr);
+	create_boss(game);
 	while (game->player.lives || game->second_player.lives)
 	{
 		game->frame_time++;
@@ -469,8 +477,14 @@ void	game_loop(t_game *game)
 			game->player.last_bullet++;
 		if (game->second_player.last_bullet < game->second_player.bullet_delay)
 			game->second_player.last_bullet++;
-		if (game->frame_time % 30 == 0)
+		if (game->frame_time % 30 == 0 && game->frame_time < 100)
 			send_enemies(game);
+		if (game->frame_time % 30 == 0 && game->frame_time > 100 && game->frame_time < 400) //waiting for all bullets and enemies to leave frame, and then boss may arrive... 
+			boss = 1;
+		if (game->frame_time % 30 == 0 && game->frame_time > 400)
+			boss = move_boss(game);
+		if (!boss && game->frame_time % 30 == 0 && game->frame_time > 400)
+			boss_script(game);
 		if (game->frame_time % SCENERY_TIME == 0)
 			update_scenery(game);
 		frame_start = get_time_ms();
@@ -482,9 +496,8 @@ void	game_loop(t_game *game)
 			int test = -1;
 			while (++test < COLS * LINES)
 			printw(" ");
-		}
-		
-		update_grid(game, ch);
+		}	
+		update_grid(game, ch, boss);
 		display_grid(game);
 		wrefresh(game->win);
 		//wrefresh(stdscr);

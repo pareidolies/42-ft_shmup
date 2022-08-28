@@ -403,13 +403,15 @@ static void	update_enemy_bullet(t_game *game)
 	}
 }
 
-static void	update_grid(t_game *game, int ch)
+static void	update_grid(t_game *game, int ch, int boss)
 {
 	//update_scenery(game);
 	update_player_pos(game, ch);
 	update_enemy_pos(game);
 	update_player_bullet(game);
 	update_enemy_bullet(game);
+	if (boss)
+		return;
 	if (ch == 32 && game->player.last_bullet >= game->player.bullet_delay && game->player.x < WIN_LEN - 1)
 	{
 		game->grid[game->player.y][game->player.x + 1] = collision(game, ACS_BULLET, game->grid[game->player.y][game->player.x + 1]);
@@ -557,7 +559,7 @@ void	game_loop1(t_game *game)
 		ch = getch();
 		if (ch == 17)
 			break ;
-		update_grid(game, ch);
+		update_grid(game, ch, boss);
 		display_grid(game);
 		wrefresh(game->win);
 		attron(A_BOLD);
