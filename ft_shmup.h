@@ -6,7 +6,7 @@
 /*   By: ppajot <ppajot@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/26 19:09:28 by ppajot            #+#    #+#             */
-/*   Updated: 2022/08/28 16:36:47 by ppajot           ###   ########.fr       */
+/*   Updated: 2022/08/28 19:53:22 by ppajot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,6 @@ typedef struct s_player
 	int	x;
 	int	y;
 	int	bullet_delay;
-	int	last_bullet;
 	int	lives;
 }		t_player;
 
@@ -102,6 +101,7 @@ typedef struct	s_game
 	int				lines;
 	int				cols;
 	int				score;
+	int				level;
 }		t_game;
 
 void	game_loop(t_game *game);
@@ -109,6 +109,7 @@ void	update_scenery(t_game *game);
 void    create_scenery(t_game *game);
 void	init_grid(t_game *game, int mode);
 void	display_grid(t_game *game);
+void	draw_box(void);
 
 
 #endif
