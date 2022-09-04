@@ -6,7 +6,7 @@
 /*   By: ppajot <ppajot@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/26 19:09:28 by ppajot            #+#    #+#             */
-/*   Updated: 2022/08/28 21:23:54 by ppajot           ###   ########.fr       */
+/*   Updated: 2022/08/28 22:59:27 by ppajot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # define WIN_HEI 40
 # define WIN_LEN 150
 # define COLOR_GREY 8
+# define COLOR_ORANGE 9
 
 # define SECOND_KEY_DOWN 115
 # define SECOND_KEY_UP 119
@@ -99,6 +100,7 @@ typedef struct	s_game
 	int				boss;
 	int				boss_pos;
 	int				boss_life;
+	int				cinematic;
 }		t_game;
 
 void	game_loop(t_game *game);

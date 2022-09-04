@@ -108,6 +108,8 @@ int	start_menu(t_game *game)
 		wrefresh(game->win);
 		if (ch == 10)
 			break ;
+		if (ch == 17)
+			return (-1);
 	}
 	wattroff(game->win, A_BOLD);
 	return (2 - ret);
@@ -161,7 +163,11 @@ int	main (void)
 	init_pair(8, COLOR_BLACK, COLOR_WHITE);
 	init_pair(9, COLOR_WHITE, COLOR_BLACK);
 	init_pair(10, COLOR_CYAN, COLOR_BLACK);
+	init_pair(11, COLOR_ORANGE, COLOR_WHITE);
+	init_pair(12, COLOR_WHITE, COLOR_ORANGE);
+
 	init_color(COLOR_BLACK, 0, 0, 0);
+	init_color(COLOR_ORANGE, 1000, 500, 0);
 	init_color(COLOR_YELLOW, 0, 0, 800);
 	init_color(COLOR_GREY, 100, 100, 100);
 	init_color(COLOR_CYAN, 800, 800, 100);
@@ -178,7 +184,7 @@ int	main (void)
 	if (!right_size(stdscr))
 	{
 		endwin();
-		fprintf(stderr,"\x1b[91mTerminal is too small! Please increase the size of your terminal.\n\x1b[0m");
+		fprintf(stderr,"\x1b[91mTerminal is too small! Please increase the size of your terminal. Prefered size : %i * %i\n\x1b[0m", WIN_LEN + 2, WIN_HEI + 4);
 		return (0);
 	}
 	create_scenery(&game);
@@ -198,7 +204,8 @@ int	main (void)
 	
 	//Adding a start menu
 	game.player_nbr = start_menu(&game);
-	game_loop(&game);
+	if (game.player_nbr != -1)
+		game_loop(&game);
 	endwin();
 	return (0);
 }

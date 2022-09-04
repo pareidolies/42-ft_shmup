@@ -4,10 +4,9 @@ int	move_boss(t_game *game)
 {
 	int	i = 0;
 	int	j = 0;
-	static int cinematic = 0;
 
-	if (cinematic == 14)
-		return (0);
+	if (game->cinematic == 14)
+		return (2);
 	while (i < 28)
 	{
 		j = 0;
@@ -18,7 +17,7 @@ int	move_boss(t_game *game)
 		}
 		i++;
 	}
-	cinematic++;
+	game->cinematic++;
 	return (1);
 }
 
